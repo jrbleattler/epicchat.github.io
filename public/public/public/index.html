@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatRoom - Online Chat Application</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Auth Pages -->
+    <div id="auth-container" class="container hidden">
+      <div class="auth-box">
+        <h1>ChatRoom</h1>
+        
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form">
+          <h2>Login</h2>
+          <input type="email" id="login-email" placeholder="Email" required>
+          <input type="password" id="login-password" placeholder="Password" required>
+          <button onclick="handleLogin()">Login</button>
+          <p>Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign Up</a></p>
+          <div id="login-error" class="error-message"></div>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="auth-form hidden">
+          <h2>Create Account</h2>
+          <input type="email" id="signup-email" placeholder="Email" required>
+          <input type="text" id="signup-username" placeholder="Username" required>
+          <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required>
+          <input type="password" id="signup-confirm" placeholder="Confirm Password" required>
+          <button onclick="handleSignup()">Sign Up</button>
+          <p>Already have an account? <a href="#" onclick="toggleAuthForm()">Login</a></p>
+          <div id="signup-error" class="error-message"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Pages -->
+    <div id="chat-container" class="container hidden">
+      <div class="sidebar">
+        <div class="profile-section">
+          <img id="user-avatar" src="/default-avatar.png" alt="Profile" class="profile-avatar">
+          <div class="profile-info">
+            <h3 id="user-name">Username</h3>
+            <span id="user-role" class="role-badge">user</span>
+          </div>
+          <button onclick="openProfileModal()" class="btn-icon">⚙️</button>
+          <button onclick="openAdminPanel()" class="btn-icon" id="admin-btn" style="display: none;">👑</button>
+        </div>
+
+        <div class="online-users">
+          <h4>Online Users (<span id="user-count">0</span>)</h4>
+          <div id="users-list" class="users-list"></div>
+        </div>
+
+        <button onclick="handleLogout()" class="btn-logout">Logout</button>
+      </div>
+
+      <div class="chat-main">
+        <div class="chat-header">
+          <h2>ChatRoom</h2>
+          <div id="typing-indicator" class="typing-indicator hidden"></div>
+        </div>
+
+        <div id="messages-container" class="messages-container"></div>
+
+        <div class="message-input-area">
+          <input 
+            type="text" 
+            id="message-input" 
+            placeholder="Type your message..." 
+            onkeypress="handleMessageKeypress(event)"
+            oninput="handleTyping()"
+          >
+          <button onclick="sendMessage()" class="btn-send">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Edit Profile</h2>
+          <button onclick="closeModal('profile-modal')" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="profile-picture-upload">
+            <img id="preview-avatar" src="/default-avatar.png" alt="Profile Preview">
+            <input type="file" id="profile-picture-input" accept="image/*" onchange="previewProfilePicture()">
+            <button onclick="document.getElementById('profile-picture-input').click()" class="btn">Change Picture</button>
+          </div>
+          <input type="text" id="edit-username" placeholder="Username" maxlength="30">
+          <textarea id="edit-bio" placeholder="Bio (optional)" maxlength="200"></textarea>
+          <div id="profile-error" class="error-message"></div>
+          <div id="profile-success" class="success-message"></div>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closeModal('profile-modal')" class="btn-secondary">Cancel</button>
+          <button onclick="updateProfile()" class="btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="modal hidden">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2>Admin Panel</h2>
+          <button onclick="closeModal('admin-modal')" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchAdminTab('users')">Users</button>
+            <button class="tab-btn" onclick="switchAdminTab('permissions')">Permissions</button>
+          </div>
+
+          <!-- Users Tab -->
+          <div id="users-tab" class="admin-tab active">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+
+          <!-- Permissions Tab -->
+          <div id="permissions-tab" class="admin-tab hidden">
+            <div class="permissions-container">
+              <div class="permission-item">
+                <h4>User Management</h4>
+                <label><input type="checkbox" name="ban-users"> Ban/Unban Users</label>
+                <label><input type="checkbox" name="kick-users"> Kick Users</label>
+              </div>
+              <div class="permission-item">
+                <h4>Moderation</h4>
+                <label><input type="checkbox" name="delete-messages"> Delete Messages</label>
+                <label><input type="checkbox" name="mute-users"> Mute Users</label>
+              </div>
+              <div class="permission-item">
+                <h4>Administration</h4>
+                <label><input type="checkbox" name="manage-roles"> Manage Roles</label>
+                <label><input type="checkbox" name="manage-settings"> Manage Settings</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closeModal('admin-modal')" class="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banned Modal -->
+    <div id="banned-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-body">
+          <h2>You have been banned</h2>
+          <p id="ban-reason">Reason: No reason provided</p>
+          <button onclick="window.location.reload()" class="btn-primary">Go Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
